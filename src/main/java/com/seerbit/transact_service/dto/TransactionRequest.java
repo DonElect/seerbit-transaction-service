@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Getter
@@ -19,5 +20,5 @@ public class TransactionRequest {
     @Pattern(regexp = "\\d+(\\.\\d{1,2})?", message = "Amount should be a valid number")
     private String amount;
     @NotNull(message = "Timestamp is required.")
-    private LocalDateTime timestamp;
+    private Instant timestamp;
 }

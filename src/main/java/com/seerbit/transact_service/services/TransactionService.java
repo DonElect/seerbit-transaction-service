@@ -1,5 +1,6 @@
 package com.seerbit.transact_service.services;
 
+import com.seerbit.transact_service.dto.StatisticsResponse;
 import com.seerbit.transact_service.dto.TransactionRequest;
 import com.seerbit.transact_service.dto.TransactionStatistics;
 import com.seerbit.transact_service.model.Transactions;
@@ -7,6 +8,6 @@ import com.seerbit.transact_service.model.Transactions;
 
 public interface TransactionService {
     void create(TransactionRequest transactions);
-    TransactionStatistics getTransactionsStatistics();
+    StatisticsResponse getTransactionsStatistics();
     void deleteAllTransactions();
 }
