@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.seerbit</groupId>
-	<artifactId>transact-service</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>transact-service</name>
+	<artifactId>transaction-service</artifactId>
+	<version>1.0.1</version>
+	<name>transaction-service</name>
 	<description>Demo project for Transaction</description>
 	<url/>
 	<licenses>
@@ -27,7 +27,7 @@
 		<url/>
 	</scm>
 	<properties>
-		<java.version>21</java.version>
+		<java.version>17</java.version>
 	</properties>
 	<dependencies>
 		<dependency>
