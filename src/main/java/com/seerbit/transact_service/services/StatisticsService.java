@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
@@ -20,8 +19,7 @@ public class StatisticsService {
     private static final int TIME_WINDOW = 30;
     private final ReentrantLock lock = new ReentrantLock();
 
-    private static final TransactionStatistics[] statistics = new TransactionStatistics[TIME_WINDOW];
-    private static final Map<String, TransactionStatistics> statisticsMap = new ConcurrentHashMap<>(2);
+    private static final Map<String, TransactionStatistics> statisticsMap = new ConcurrentHashMap<>(1);
     private volatile BigDecimal sum = BigDecimal.ZERO;
     private volatile BigDecimal max = BigDecimal.valueOf(Double.MIN_VALUE);
     private volatile BigDecimal min = BigDecimal.valueOf(Double.MAX_VALUE);
@@ -31,9 +29,7 @@ public class StatisticsService {
 
     public StatisticsService() {
         // Initialize array with empty statistics
-        for (int i = 0; i < TIME_WINDOW; i++) {
-            statistics[i] = new TransactionStatistics();
-        }
+        statisticsMap.put(KEY, new TransactionStatistics());
     }
 
     public void addTransaction(BigDecimal amount, Instant timestamp) {
@@ -46,17 +42,16 @@ public class StatisticsService {
 
         lastTransactionTime = transactionTime;
 
-        int index = (int) (transactionTime % TIME_WINDOW);
         lock.lock();
         try {
             // Clear old data at this index if it's from an old time
-            if (statistics[index].getTimestamp() != transactionTime) {
-                removeOldStatistics(index);
-                statistics[index] = new TransactionStatistics(transactionTime, amount, amount, amount, 1);
+            if (statisticsMap.get(KEY).getTimestamp() != transactionTime) {
+                removeOldStatistics();
+                statisticsMap.put(KEY, new TransactionStatistics(transactionTime, amount, amount, amount, 1));
 
             } else {
                 // Update existing statistics for this second
-                statistics[index].addTransaction(amount);
+                statisticsMap.get(KEY).addTransaction(amount);
             }
             // Update global statistics
             updateGlobalStatistics();
@@ -65,9 +60,9 @@ public class StatisticsService {
         }
     }
 
-    private void removeOldStatistics(int index) {
-        sum = sum.subtract(statistics[index].getSum());
-        count -= statistics[index].getCount();
+    private void removeOldStatistics() {
+        sum = sum.subtract(statisticsMap.get(KEY).getSum());
+        count -= statisticsMap.get(KEY).getCount();
         if (count == 0) {
             min = BigDecimal.valueOf(Double.MAX_VALUE);
             max = BigDecimal.valueOf(Double.MIN_VALUE);
@@ -75,11 +70,10 @@ public class StatisticsService {
             min = BigDecimal.valueOf(Double.MAX_VALUE);
             max = BigDecimal.valueOf(Double.MIN_VALUE);
             // Recompute min and max
-            for (TransactionStatistics stat : statistics) {
-                if (stat.getCount() > 0) {
-                    min = min.min(stat.getMin());
-                    max = max.max(stat.getMax());
-                }
+            TransactionStatistics stat = statisticsMap.get(KEY);
+            if (stat.getCount() > 0) {
+                min = min.min(stat.getMin());
+                max = max.max(stat.getMax());
             }
         }
     }
@@ -89,13 +83,12 @@ public class StatisticsService {
         count = 0;
         min = BigDecimal.valueOf(Double.MAX_VALUE);
         max = BigDecimal.valueOf(Double.MIN_VALUE);
-        for (TransactionStatistics stat : statistics) {
-            if (stat.getCount() > 0) {
-                sum = sum.add(stat.getSum());
-                count += stat.getCount();
-                min = min.min(stat.getMin());
-                max = max.max(stat.getMax());
-            }
+        TransactionStatistics stat = statisticsMap.get(KEY);
+        if (stat.getCount() > 0) {
+            sum = sum.add(stat.getSum());
+            count += stat.getCount();
+            min = min.min(stat.getMin());
+            max = max.max(stat.getMax());
         }
     }
 
