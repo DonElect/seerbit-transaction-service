@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Getter
 @Setter
@@ -20,5 +20,5 @@ public class Transactions {
     @Column(nullable = false)
     private BigDecimal amount;
     @Column(nullable = false)
-    private LocalDateTime timestamp;
+    private Instant timestamp;
 }
