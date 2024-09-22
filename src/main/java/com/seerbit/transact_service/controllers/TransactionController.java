@@ -3,7 +3,6 @@ package com.seerbit.transact_service.controllers;
 import com.seerbit.transact_service.dto.StatisticsResponse;
 import com.seerbit.transact_service.dto.TransactionRequest;
 import com.seerbit.transact_service.model.ApiResponse;
-import com.seerbit.transact_service.services.StatisticsService;
 import com.seerbit.transact_service.services.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@RestController  // Marks this class as a REST controller, handling HTTP requests
+@RestController
 @RequestMapping("/api/transaction-service")  // Base URL for all endpoints in this controller
 @RequiredArgsConstructor  // Automatically generates constructor for final fields
 public class TransactionController {

@@ -18,8 +18,8 @@ import java.time.Instant;
 
 @Service
 @Transactional
-@RequiredArgsConstructor  // Automatically generates a constructor for final fields
-@Slf4j  // Provides logging functionality
+@RequiredArgsConstructor
+@Slf4j
 public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionsRepository transactionsRepository;  // Handles database operations for transactions

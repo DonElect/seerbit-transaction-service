@@ -29,16 +29,17 @@ public class StatisticsService {
 
     /**
      * Adds a transaction to the statistics if it falls within the 30-second time window.
-     * @param amount The transaction amount.
+     *
+     * @param amount    The transaction amount.
      * @param timestamp The timestamp when the transaction occurred.
      */
-    public void addTransaction(BigDecimal amount, Instant timestamp) {
+    public boolean addTransaction(BigDecimal amount, Instant timestamp) {
         long now = Instant.now().getEpochSecond();
         long transactionTime = timestamp.getEpochSecond();
 
         // Ignore transactions older than the defined time window (30 seconds)
         if (now - transactionTime >= TIME_WINDOW) {
-            return;
+            return false;
         }
 
         // Lock the critical section to ensure thread safety during updates
@@ -54,10 +55,12 @@ public class StatisticsService {
         } finally {
             lock.unlock();  // Always unlock to avoid potential deadlocks
         }
+        return true;
     }
 
     /**
      * Resets the statistics for a new second, clearing out old data and initializing the time.
+     *
      * @param transactionTime The timestamp of the new transaction (in seconds).
      */
     private void resetStatistics(long transactionTime) {
@@ -74,6 +77,7 @@ public class StatisticsService {
 
     /**
      * Updates the global statistics (sum, min, max, and count) using the provided transaction amount.
+     *
      * @param amount The amount of the transaction to be added to the statistics.
      */
     private void updateGlobalStatistics(BigDecimal amount) {
@@ -86,32 +90,35 @@ public class StatisticsService {
     /**
      * Returns the current statistics based on transactions within the last 30 seconds.
      * If no transactions exist within this window, returns zeroed statistics.
+     *
      * @return A StatisticsResponse object containing the sum, average, max, min, and count.
      */
     public StatisticsResponse getStatistics() {
         lock.lock();
+        StatisticsResponse statisticsResponse;
         try {
             long now = Instant.now().getEpochSecond();
             // If no transactions in the last 30 seconds, return zeroed statistics
             if (now - lastTransactionTime >= TIME_WINDOW || count == 0) {
-                return new StatisticsResponse(
+                statisticsResponse = new StatisticsResponse(
                         BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP),
                         BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP),
                         BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP),
                         BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP),
                         0);
+            } else {
+                // Calculate average (sum / count) and return the statistics response
+                BigDecimal avg = sum.divide(BigDecimal.valueOf(count), 2, RoundingMode.HALF_UP);
+                statisticsResponse = new StatisticsResponse(
+                        sum.setScale(2, RoundingMode.HALF_UP),
+                        avg,
+                        max.setScale(2, RoundingMode.HALF_UP),
+                        min.setScale(2, RoundingMode.HALF_UP),
+                        count);
             }
-
-            // Calculate average (sum / count) and return the statistics response
-            BigDecimal avg = sum.divide(BigDecimal.valueOf(count), 2, RoundingMode.HALF_UP);
-            return new StatisticsResponse(
-                    sum.setScale(2, RoundingMode.HALF_UP),
-                    avg,
-                    max.setScale(2, RoundingMode.HALF_UP),
-                    min.setScale(2, RoundingMode.HALF_UP),
-                    count);
         } finally {
             lock.unlock();  // Ensure the lock is released after operation
         }
+        return statisticsResponse;
     }
 }
